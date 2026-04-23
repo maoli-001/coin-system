@@ -28,7 +28,8 @@ database:
   port: :3306
   user: your_username
   password: your_password
-  name: currency_exchange_db```
+  name: currency_exchange_db
+```
 同时创建一个与`config`同级的文件`main.go`<br>
 ### 敲命令
 `go mod init`<br>

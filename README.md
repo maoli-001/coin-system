@@ -166,4 +166,20 @@ func InitDB() {
 连接数据库，一些重要配置应该写在`config.yml`中，详见文件<br>
 创建全局文件`global`,再建`global.go`,将全局变量放在里面，比如数据库<br>
 
+### 写注册功能
+新建`controllers`文件下建`auth_controller.go`<br>
+新建`models`文件下建`user.go`<br>
+`user.go`
+```
+package models
 
+import (
+	"gorm.io/gorm"
+)
+
+type User struct {
+	gorm.Model		//gorm框架下的模型
+	Username string `gorm:"unique"`	//用户名，同时增加一个用户名唯一的验证
+	Password string					//密码
+}
+```

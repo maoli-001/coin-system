@@ -183,3 +183,65 @@ type User struct {
 	Password string					//密码
 }
 ```
+
+为了保护用户信息，防止密码被暴力破解，采用**Bcrypt**加密<br>
+Bcrypt 是一种用于密码哈希的加密算法，它是基于 Blowfish 算法的加强版, 被广泛应用于存储密码和进行身份验证。<br>
+
+新建`utils`文件，建一个`utils.go`，将加密代码写在里面<br>
+
+`go get -u golang.org/x/crypto/bcrypt`下载bcrypt<br>
+
+`go get github.com/golang-jwt/jwt/v5`下载JWT<br>
+
+`go mod tidy`安装依赖<br>
+
+注册接口最终在`auth_controller.go`+`utils.go`中<br>
+
+**建立数据库表**
+`db.AutoMigrate(&User{})`
+
+#### 插点小知识http
+|常量|状态码含义|使用场景|
+|:---:|:---:|:---:|
+|http.StatusOK|200|成功正常返回|
+|http.StatusBadRequest|400|请求错误，参数错、格式错|
+|http.StatusUnauthorized|401|未登录，没有 token /token 无|
+|http.StatusForbidden|403|无权限登录了但不能访|
+|http.StatusNotFound|404|不存在，接口/资源找不到|
+|http.StatusInternalServerError|500|服务器错误，代码 panic、服务异常|
+
+### 登录功能
+**结构体标签**
+```
+var input struct {
+    Username string `json:"username"`
+    Password string `json:"password"`
+}
+```
+将结构体转换为JSON字段，确保前后端间大小写的认证
+
+**查询数据库中的东西**
+`db.Where("name = ?", "jinzhu").First(&user)`
+
+**验证密码的正确性**
+`bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))`
+
+### 测试端口
+将`router.go`中的端口更改
+```
+auth.POST("/login", controllers.Login)
+		auth.POST("/register", controllers.Register)
+```
+
+`go mod tidy`
+`go run .`
+打开postman,测试JSON
+```
+{
+  "username": "maoli1111",
+  "password": "123456"
+}
+```
+<img width="2361" height="1506" alt="image" src="https://github.com/user-attachments/assets/bac38773-46a7-4052-bae5-71ff8ee20c53" />
+再修改API为登录接口的，依旧返回token
+

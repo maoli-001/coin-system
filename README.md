@@ -1,4 +1,4 @@
-# Gin+Gorm+Mysql+Vue 货币汇率项目
+<img width="2364" height="1509" alt="image" src="https://github.com/user-attachments/assets/ca14da70-5682-47b7-a998-f68f9fefefd5" /># Gin+Gorm+Mysql+Vue 货币汇率项目
 
 ## 环境准备
 
@@ -166,7 +166,7 @@ func InitDB() {
 连接数据库，一些重要配置应该写在`config.yml`中，详见文件<br>
 创建全局文件`global`,再建`global.go`,将全局变量放在里面，比如数据库<br>
 
-### 写注册功能
+### 注册接口
 新建`controllers`文件下建`auth_controller.go`<br>
 新建`models`文件下建`user.go`<br>
 `user.go`
@@ -210,7 +210,7 @@ Bcrypt 是一种用于密码哈希的加密算法，它是基于 Blowfish 算法
 |http.StatusNotFound|404|不存在，接口/资源找不到|
 |http.StatusInternalServerError|500|服务器错误，代码 panic、服务异常|
 
-### 登录功能
+### 登录接口
 **结构体标签**
 ```
 var input struct {
@@ -245,3 +245,56 @@ auth.POST("/login", controllers.Login)
 <img width="2361" height="1506" alt="image" src="https://github.com/user-attachments/assets/bac38773-46a7-4052-bae5-71ff8ee20c53" />
 再修改API为登录接口的，依旧返回token
 
+### 创建货币汇率接口
+
+在`controllers`下创建`exchangeapp_rate_contoller.go`继续写该功能的函数<br>
+
+在`models`下创建`exchange_rate.go`写货币汇率exchangeRate这个对象的结构体<br>
+```
+type ExchangeRate struct {
+	ID           uint      `gorm:"primarykey" jsom:"_id"`
+	FromCurrency string    `json:"fromCurrency" binding:"required"`
+	ToCurrency   string    `json:"toCurrency" binding:"required"`
+	Rate         float64   `json:"rate" binding:"required"`
+	Date         time.Time `json:"date"`
+}
+```
+
+### 获取货币汇率接口
+继续在`exchangeapp_rate_controller.go`中写获取汇率函数<br>
+
+### 在创建汇率时要验证登录状态，使用中间件
+创建`middlewares`,下建`auth_middleware.go`
+
+```
+func AuthMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+	}
+}
+```
+
+将JWT解析函数写在`utils.go`中
+
+### 配置路由
+```
+	api := r.Group("/api")
+	api.GET("/exchangeRates", controllers.GetExchangeRates)
+	api.Use(middlewares.AuthMiddleware())
+	{
+		api.POST("/exchangeRates", controllers.CreateExchangeRate)
+	}
+```
+
+### 测试接口
+首先**登录一下信息**，将返回token复制下来（只复制bearer 后面）
+<img width="2364" height="1509" alt="image" src="https://github.com/user-attachments/assets/a41ebdd8-02b4-4510-b532-6fc0e69f0831" />
+
+```
+{
+  "fromCurrency": "EUR",
+  "toCurrency": "USD",
+  "rate": 1.1
+}
+```
+
+复制测试信息后返回token,更换为GET也成功

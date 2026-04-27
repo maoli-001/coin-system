@@ -298,3 +298,27 @@ func AuthMiddleware() gin.HandlerFunc {
 ```
 
 复制测试信息后返回token,更换为GET也成功
+
+### 文章接口
+`models`下新建`article.go`写文章结构体
+```
+type Article struct {
+	gorm.Model
+	Title   string `binding:"required"`
+	Conetnt string `binding:"required"`
+	Preview string `binding:"required"`
+	Likes   int    `gorm:"default:0"`
+}
+```
+
+`controllers`下新建`article_controller.go`写文章接口<br>
+包括创建文章接口和获取文章接口<br>
+逻辑处理跟前面类似<br>
+
+### 路由参数设置
+静态参数：完全匹配的路由,如`/article`<br>
+参数路由：在路径中带上了参数(Params)的路由, 如`/articles/:id`<br>
+在Gin中，用`c.Param()`获取路径中的参数, 那么其会返回 URL 参数的值, 比如说 1<br>
+
+`errors.Is()`用于判断是不是找不到（NOTFOUND)<br>
+

@@ -322,3 +322,61 @@ type Article struct {
 
 `errors.Is()`用于判断是不是找不到（NOTFOUND)<br>
 
+### 用Redis搞定点赞功能
+**安装 Redis**
+[下载链接](https://github.com/tporadowski/redis/releases)
+
+**进行配置**
+打开目录中名为`redis.windows.conf`的文件<br>
+在文件中搜索`appendonly no`<br>
+将`appendonly no`改为`appendonly yes`<br>
+
+**安装go和redis的交互工具**
+`go get -u github.com/go-redis/redis`
+
+**初始化redis**
+在`config`下创建`redis.go`文件
+```
+package config
+
+import (
+	"Exchangeapp/global"
+	"log"
+
+	"github.com/go-redis/redis"
+)
+
+func InitRedis() {
+	RedisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		DB:       0,
+		Password: "",
+	})
+
+	_, err := RedisClient.Ping().Result()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis,got error %v", err.Error())
+	}
+
+	global.RedisDB = RedisClient
+}
+```
+(注：`Addr:"localhost:6379"`指的是下载redis时的端口6379，一般默认是，不要改！！！)
+
+回到`config.go`中添加一句`InitRedis()`<br>
+
+### 点赞数接口
+在`controllers`下建`like_controller.go`<br>
+主要逻辑：**点赞文章**，**获取点赞数**
+
+### 配置路由
+在`router.go`中，
+```
+		api.GET("/articles", controllers.GetArticles)
+		api.GET("/articles/:id", controllers.GetArticlesByID)
+
+		api.POST("/articles/:id/like", controllers.LikeArticle)
+		api.GET("/articles/:id/like", controllers.GetArticleLikes)
+```
+添加在`api.Use(){}`中
+

@@ -1,4 +1,5 @@
-<img width="2364" height="1509" alt="image" src="https://github.com/user-attachments/assets/ca14da70-5682-47b7-a998-f68f9fefefd5" /># Gin+Gorm+Mysql+Vue 货币汇率项目
+# Gin+Gorm+Mysql+Vue 货币汇率项目
+<img width="2364" height="1509" alt="image" src="https://github.com/user-attachments/assets/ca14da70-5682-47b7-a998-f68f9fefefd5" />
 
 ## 环境准备
 
@@ -305,7 +306,7 @@ func AuthMiddleware() gin.HandlerFunc {
 type Article struct {
 	gorm.Model
 	Title   string `binding:"required"`
-	Conetnt string `binding:"required"`
+	Content string `binding:"required"`
 	Preview string `binding:"required"`
 	Likes   int    `gorm:"default:0"`
 }
@@ -380,3 +381,37 @@ func InitRedis() {
 ```
 添加在`api.Use(){}`中
 
+### 优化文章接口
+**用缓存Redis请求存储的文章，加快速度**
+`cacheData, err := global.RedisDB.Get(cacheKey).Result()`从缓存中拿文章
+更改`article_controller.go`里`GetArticles`函数，逻辑：<br>
+**1.缓存未命中**<br>
+**无缓存:** 从数据库中拿缓存，将数据库内容序列化为JSON，返回数据库数据<br>
+**发生错误：** <br>
+**2.缓存命中**<br>
+**有缓存：** 反序列化JSON为go结构体，并返回缓存数据
+
+### 测试文章和点赞接口
+依旧先登录拿到token<br>
+先测试创建文章接口
+```
+{
+    "title": "测试文章标题",
+    "content": "测试文章内容",
+    "preview": "测试文章摘要"
+}
+```
+<img width="2382" height="1533" alt="image" src="https://github.com/user-attachments/assets/39846dc0-67ed-4190-9912-00d3741a641e" />
+可以看到返回了文章信息<br>
+
+测试获取文章接口<br>
+<img width="2385" height="1536" alt="image" src="https://github.com/user-attachments/assets/8e58d2df-96ca-4216-abf3-198ee8d90190" />
+返回id为5的文章信息了<br>
+
+接着测试点赞接口<br>
+<img width="2385" height="1536" alt="image" src="https://github.com/user-attachments/assets/c8837a28-4498-49ee-87b0-ee149c0c9483" />
+点赞成功<br>
+
+测试获取点赞数的接口<br>
+<img width="2385" height="1536" alt="image" src="https://github.com/user-attachments/assets/bfc28cfe-2586-473b-99ba-0c97f98a13d5" />
+返回点赞数<br>

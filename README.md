@@ -415,3 +415,25 @@ func InitRedis() {
 测试获取点赞数的接口<br>
 <img width="2385" height="1536" alt="image" src="https://github.com/user-attachments/assets/bfc28cfe-2586-473b-99ba-0c97f98a13d5" />
 返回点赞数<br>
+
+### 解决其他问题
+**打开前端网页**<br>
+进入前端文件`npm i`安装依赖<br>
+`npm run dev`运行<br>
+
+**发现无法跨域请求后端接口**
+**[CORS](https://github.com/gin-contrib/cors)**
+前端在浏览器里访问后端接口，浏览器不让访问，报跨域错误，这时候就需要 Cors 解决！协议 / 域名 / 端口 有一个不一样，就需要跨域<br>
+安装cors中间件`go get github.com/gin-contrib/cors`<br>
+在`router.go`中
+```
+r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+```
+需要导入包<br>

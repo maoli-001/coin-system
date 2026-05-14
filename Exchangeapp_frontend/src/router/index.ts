@@ -5,6 +5,7 @@ import NewsView from '../views/NewsView.vue';
 import NewsDetailView from '../views/NewsDetailView.vue';
 import Login from '../components/Login.vue';
 import Register from '../components/Register.vue';
+import UserCenter from '../views/UserCenter.vue';
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'Home', component: HomeView },
@@ -13,6 +14,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/news/:id', name: 'NewsDetail', component: NewsDetailView },
   { path: '/login', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
+  { path: '/user', name: 'UserCenter', component: UserCenter },
 ];
 
 const router = createRouter({

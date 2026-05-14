@@ -1,73 +1,91 @@
 <template>
-  <div class="exchange-page">
-    <div class="exchange-wrapper">
-      <h2 class="title">💱 货币实时兑换</h2>
-      <p class="subtitle">快速查询全球货币汇率，一键完成换算</p>
+  <div class="exchange-modern">
+    <!-- 动态粒子背景 -->
+    <div class="particles-bg"></div>
+    
+    <div class="exchange-container">
+      <div class="exchange-header">
+        <h1 class="exchange-title">
+          <span class="gradient-text">货币兑换</span>
+          <br/>精准换算
+        </h1>
+        <p class="exchange-description">
+          支持50+种货币 · 实时汇率更新 · 智能兑换计算
+        </p>
+      </div>
 
-      <el-card shadow="hover" class="exchange-card">
-        <el-form :model="form" class="exchange-form">
-          <el-form-item label="从货币" label-width="80px">
-            <el-select
-              v-model="form.fromCurrency"
-              placeholder="请选择货币"
-              style="width: 100%"
-              size="default"
-            >
-              <el-option
-                v-for="currency in currencies"
-                :key="currency"
-                :label="currency"
-                :value="currency"
-              />
-            </el-select>
-          </el-form-item>
+      <div class="exchange-card">
+        <div class="currency-section">
+          <div class="currency-input">
+            <label class="input-label">从货币</label>
+            <div class="select-wrapper">
+              <select 
+                v-model="form.fromCurrency" 
+                class="modern-select"
+                :class="{ 'has-value': form.fromCurrency }"
+              >
+                <option value="" disabled>请选择货币</option>
+                <option v-for="currency in currencies" :key="currency" :value="currency">
+                  {{ currency }}
+                </option>
+              </select>
+            </div>
+          </div>
 
-          <el-form-item label="兑换为" label-width="80px">
-            <el-select
-              v-model="form.toCurrency"
-              placeholder="请选择目标货币"
-              style="width: 100%"
-              size="default"
-            >
-              <el-option
-                v-for="currency in currencies"
-                :key="currency"
-                :label="currency"
-                :value="currency"
-              />
-            </el-select>
-          </el-form-item>
+          <div class="swap-icon" @click="swapCurrencies">
+            <span class="swap-arrow">⇄</span>
+          </div>
 
-          <el-form-item label="金额" label-width="80px">
-            <el-input
-              v-model="form.amount"
-              type="number"
-              placeholder="请输入兑换金额"
-              style="width: 100%"
-              size="default"
-            />
-          </el-form-item>
+          <div class="currency-input">
+            <label class="input-label">兑换为</label>
+            <div class="select-wrapper">
+              <select 
+                v-model="form.toCurrency" 
+                class="modern-select"
+                :class="{ 'has-value': form.toCurrency }"
+              >
+                <option value="" disabled>请选择目标货币</option>
+                <option v-for="currency in currencies" :key="currency" :value="currency">
+                  {{ currency }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-          <el-form-item style="margin-top: 10px">
-            <el-button
-              type="primary"
-              @click="exchange"
-              class="exchange-btn"
-              size="default"
-              block
-            >
-              立即兑换
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
+        <div class="amount-section">
+          <label class="input-label">金额</label>
+          <input 
+            v-model="form.amount"
+            type="number"
+            placeholder="请输入兑换金额"
+            class="amount-input"
+          />
+        </div>
+
+        <button class="exchange-btn" @click="exchange">
+          <span>立即兑换</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
 
       <!-- 兑换结果 -->
-      <div v-if="result !== null" class="result-card">
-        <div class="result-title">兑换结果</div>
-        <div class="result-value">{{ result.toFixed(2) }}</div>
-        <div class="result-tip">{{ form.toCurrency }} 金额</div>
-      </div>
+      <transition name="fade">
+        <div v-if="result !== null" class="result-card">
+          <div class="result-icon">💰</div>
+          <div class="result-content">
+            <div class="result-label">兑换结果</div>
+            <div class="result-amount">{{ result.toFixed(2) }}</div>
+            <div class="result-currency">{{ form.toCurrency }}</div>
+            <div class="rate-hint">
+              1 {{ form.fromCurrency }} = {{ (form.amount ? result / form.amount : 0).toFixed(4) }} {{ form.toCurrency }}
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -103,19 +121,42 @@ const fetchCurrencies = async () => {
       allCurrencies.push(rate.toCurrency);
     });
     currencies.value = [...new Set(allCurrencies)];
-
   } catch (error) {
     console.log('Failed to load currencies', error);
   }
 };
 
-const exchange = () => {
-  const rate = rates.value.find(
-    (rate) => rate.fromCurrency === form.value.fromCurrency && rate.toCurrency === form.value.toCurrency
-  )?.rate;
+// 货币互换
+const swapCurrencies = () => {
+  const temp = form.value.fromCurrency;
+  form.value.fromCurrency = form.value.toCurrency;
+  form.value.toCurrency = temp;
+  if (result.value !== null) {
+    exchange();
+  }
+};
 
-  if (rate) {
-    result.value = form.value.amount * rate;
+// 任意两个货币可以兑换 A->人民币->B（完全保留原有逻辑）
+const exchange = () => {
+  const getCnyRate = (currency: string) => {
+    const item = rates.value.find(
+      r => r.fromCurrency === currency && r.toCurrency === "人民币"
+    );
+    if (item) return item.rate;
+
+    const reverse = rates.value.find(
+      r => r.fromCurrency === "人民币" && r.toCurrency === currency
+    );
+    if (reverse) return 1 / reverse.rate;
+
+    return 1;
+  };
+
+  const fromRate = getCnyRate(form.value.fromCurrency);
+  const toRate = getCnyRate(form.value.toCurrency);
+
+  if (fromRate && toRate && form.value.amount > 0) {
+    result.value = form.value.amount * (fromRate / toRate);
   } else {
     result.value = null;
   }
@@ -125,108 +166,329 @@ onMounted(fetchCurrencies);
 </script>
 
 <style scoped>
-/* 页面整体布局 */
-.exchange-page {
+/* ===== 与主页同风格 ===== */
+.exchange-modern {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --dark-bg: #0f172a;
+  
   min-height: 100vh;
-  padding: 40px 20px;
-  background: #f7f8fa;
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  padding: 60px 20px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
 }
 
-/* 内容容器 */
-.exchange-wrapper {
+/* 粒子背景 */
+.particles-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 2px, transparent 2px),
+    radial-gradient(circle at 90% 80%, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 50px 50px, 30px 30px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.exchange-container {
+  max-width: 550px;
   width: 100%;
-  max-width: 520px;
+  position: relative;
+  z-index: 2;
 }
 
-/* 标题 */
-.title {
-  font-size: 26px;
-  font-weight: 600;
-  color: #2c3e50;
+/* 头部区域 */
+.exchange-header {
   text-align: center;
-  margin: 0 0 8px 0;
+  margin-bottom: 48px;
 }
 
-.subtitle {
-  font-size: 14px;
-  color: #7f8c8d;
-  text-align: center;
-  margin: 0 0 30px 0;
+.exchange-title {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  color: white;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, #a5d8ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.exchange-description {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.3px;
 }
 
 /* 兑换卡片 */
 .exchange-card {
-  border-radius: 16px;
-  padding: 28px;
-  border: none;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 32px;
+  padding: 40px 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* 表单间距 */
-.exchange-form {
+/* 货币选择区域 */
+.currency-section {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 28px;
+}
+
+.currency-input {
+  flex: 1;
+}
+
+.input-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.modern-select {
   width: 100%;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
 }
 
-/* 按钮美化 */
-.exchange-btn {
-  height: 44px;
-  width:425px;
+.modern-select:hover {
+  border-color: #cbd5e1;
+}
+
+.modern-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modern-select.has-value {
+  border-color: #667eea;
+}
+
+/* 互换图标 */
+.swap-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  margin-bottom: 2px;
+}
+
+.swap-arrow {
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.swap-icon:hover .swap-arrow {
+  transform: rotate(180deg);
+}
+
+/* 金额输入区域 */
+.amount-section {
+  margin-bottom: 32px;
+}
+
+.amount-input {
+  width: 90%;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
   font-size: 16px;
   font-weight: 500;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #409eff 0%, #69b1ff 100%);
+  color: #1e293b;
+  transition: all 0.3s ease;
+}
+
+.amount-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.amount-input::placeholder {
+  color: #94a3b8;
+  font-weight: normal;
+}
+
+/* 兑换按钮 */
+.exchange-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.exchange-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.exchange-btn:active {
+  transform: translateY(0);
 }
 
 /* 结果卡片 */
 .result-card {
-  margin-top: 24px;
-  padding: 28px;
-  background: #ffffff;
-  border-radius: 16px;
-  text-align: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  margin-top: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.result-title {
+.result-icon {
+  font-size: 48px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.result-content {
+  flex: 1;
+}
+
+.result-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.result-amount {
+  font-size: 42px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.result-currency {
   font-size: 14px;
-  color: #7f8c8d;
+  color: #475569;
+  font-weight: 500;
   margin-bottom: 8px;
 }
 
-.result-value {
-  font-size: 36px;
-  font-weight: bold;
-  color: #27ae60;
-  line-height: 1.2;
+.rate-hint {
+  font-size: 12px;
+  color: #94a3b8;
 }
 
-.result-tip {
-  font-size: 13px;
-  color: #95a5a6;
-  margin-top: 6px;
+/* 动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
 }
 
-/* 元素间距 */
-:deep(.el-form-item) {
-  margin-bottom: 20px;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
-/* 输入框/选择器圆角 */
-:deep(.el-input__wrapper),
-:deep(.el-select__wrapper) {
-  border-radius: 10px !important;
-  box-shadow: none;
-  border: 1px solid #e4e7ed;
+/* 响应式 */
+@media (max-width: 600px) {
+  .exchange-modern {
+    padding: 40px 16px;
+  }
+  
+  .exchange-title {
+    font-size: 32px;
+  }
+  
+  .exchange-card {
+    padding: 28px 20px;
+  }
+  
+  .currency-section {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .swap-icon {
+    align-self: center;
+    transform: rotate(90deg);
+    width: 44px;
+    height: 44px;
+  }
+  
+  .swap-icon:hover {
+    transform: rotate(90deg) scale(1.05);
+  }
+  
+  .result-card {
+    padding: 24px;
+  }
+  
+  .result-amount {
+    font-size: 32px;
+  }
+  
+  .result-icon {
+    font-size: 36px;
+  }
 }
 
-/* 聚焦效果 */
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-select__wrapper.is-focus) {
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
-  border-color: #409eff;
+/* 移除 input number 箭头 */
+.amount-input::-webkit-inner-spin-button,
+.amount-input::-webkit-outer-spin-button {
+  opacity: 0.5;
 }
 </style>

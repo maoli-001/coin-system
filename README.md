@@ -441,4 +441,4 @@ r.Use(cors.New(cors.Config{
 
 ## 后续
 后续我用ai修改了前端，同时修改增加了一些接口<br>
-1like_controller.go`中点赞文章的接口`likeArticle`功能修改为一个用户同篇文章只能点赞一次，同时可以取消点赞，相应的`GetArticleLikes`也要修改<br>
+`like_controller.go`中点赞文章的接口`likeArticle`功能修改为一个用户同篇文章只能点赞一次，同时可以取消点赞，相应的`GetArticleLikes`也要修改<br>
